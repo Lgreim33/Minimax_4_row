@@ -1,5 +1,5 @@
 import numpy as np
-#comment to check git 
+
 
 class Board:
     LENGTH = 6
@@ -10,7 +10,6 @@ class Board:
     TIE = 0
     #refernece to board
     board = None
-    book = int()
     
     def __init__(self):
         #if value is not 0 or 1 it is empty, 0 will be Os and 1 will be Xs
