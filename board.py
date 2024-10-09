@@ -23,6 +23,17 @@ class Board:
     def is_valid_move(self,coord):
         return (coord[0] < 5 and coord[1] < 6 and np.isnan(self.board[coord[0]][coord[1]]))
     
+        #this will be used to generate the sucessors of the current game state        
+    def get_valid_moves(self,player:bool):
+        return 
+            
+        
+    def is_full(self):
+        if True in np.isnan(self.board):
+            return False
+        else: 
+            return True
+        
     
     def check_horizontal(self, player):
         """
@@ -111,16 +122,7 @@ class Board:
 
         return consecutive_coords
 
-    #this will be used to generate the sucessors of the current game state        
-    def get_valid_moves(self,player:bool):
-        return 
-            
-        
-    def is_full(self):
-        if True in np.isnan(self.board):
-            return False
-        else: 
-            return True
+
     
     
     #helper function for heuristic calculation    
@@ -138,28 +140,74 @@ class Board:
         
         if len(consecutive_sets) == 0:
             return []
-        open_spaces_counts = []
+        
+        open_space_counts = [0] * len(consecutive_sets)
 
-        for p_set in consecutive_sets:
-            print(p_set[0])
+        for i,p_set in enumerate(consecutive_sets):
+
             #determine the orientation of the set
             
             #horizontal case
             if(p_set[0][0][0] == p_set[0][1][0]):
-                print("horizon")
+                
+                left_point = (p_set[0][0][0],p_set[0][0][1]-1)
+                right_point =(p_set[0][-1][0],p_set[0][-1][1]+1)
+           
+                #left open check
+                if(self.is_valid_move(left_point)):
+                    open_space_counts[i] += 1
+                    
+                #right open check    
+                if(self.is_valid_move(right_point)):
+                    open_space_counts[i] += 1
+                    
+                
                 
             #vertical case
             elif(p_set[0][0][1] == p_set[0][1][1]):
-                print("vert")
+                
+                top_point = (p_set[0][0][0]-1,p_set[0][0][1])
+                bottom_point = (p_set[0][-1][0]+1,p_set[0][-1][1])
 
-            #diagnal case
-            else:
-                print("Diag")
+                #top check 
+                if(self.is_valid_move(top_point)):
+                    open_space_counts[i] += 1
+
+                #bottom check
+                if(self.is_valid_move(bottom_point)):
+                    open_space_counts[i] += 1
+
+            #diagnal case top left to bottom right
+            elif p_set[0][0][0] < p_set[0][1][0] and p_set[0][0][1] < p_set[0][1][1]:
+                left_point = (p_set[0][0][0]-1,p_set[0][0][1]-1)
+                right_point =(p_set[0][-1][0]+1,p_set[0][-1][1]+1)
+                
+                #left open check
+                if(self.is_valid_move(left_point)):
+                    open_space_counts[i] += 1
+                    
+                #right open check    
+                if(self.is_valid_move(right_point)):
+                    open_space_counts[i] += 1
             
+            #diagnal case top right to bottom left    
+            elif p_set[0][0][0] > p_set[0][1][0] and p_set[0][0][1] < p_set[0][1][1]:
+                left_point = (p_set[0][0][0]+1,p_set[0][0][1]-1)
+                right_point =(p_set[0][-1][0]-1,p_set[0][-1][1]+1)
+            
+                #left open check
+                if(self.is_valid_move(left_point)):
+                    open_space_counts[i] += 1
+                    
+                #right open check    
+                if(self.is_valid_move(right_point)):
+                    open_space_counts[i] += 1
 
             # Make sure we're working with sets with at least 2 points
             if len(p_set) < 2:
                 continue
+            
+        return open_space_counts
             
 
  
@@ -167,6 +215,7 @@ class Board:
     #calculates the heuristic of the given board state, depending on current player
     def heuristic(self,player:bool):
         
+        #check termial cases before calculating the heuristic ie, full board or a player won
    
         two_side_three_row_me = 0
         two_side_three_row_opponent = 0
