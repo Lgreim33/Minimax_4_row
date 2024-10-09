@@ -1,5 +1,21 @@
 import numpy as np
 
+def is_subset(list1, list2):
+    return set(list1).issubset(set(list2))
+
+# Function that filters out lists that are subsets of another list
+def remove_subsets(lists_of_tuples):
+    filtered_lists = []
+        
+    for lst in lists_of_tuples:
+        if not any(is_subset(lst, other) for other in filtered_lists):
+            # Only add if it's not a subset of an already added list
+            filtered_lists.append(lst)
+        
+    return filtered_lists
+
+
+
 class Board:
     LENGTH = 6
     HEIGHT = 5
@@ -123,17 +139,19 @@ class Board:
         return consecutive_coords
 
 
-    
-    
-    #helper function for heuristic calculation    
-    def in_a_row(self,player:bool):
+
+
+    # Main function to calculate in-a-row sets without subsets
+    def in_a_row(self, player: bool):
         horizontal = self.check_horizontal(player)
         vertical = self.check_vertical(player)
         bottom_l_top_r = self.check_diagonal_bl_tr(player)
         bottom_r_top_l = self.check_diagonal_tl_br(player)
         
+        all_rows = horizontal + vertical + bottom_l_top_r + bottom_r_top_l
         
-        return horizontal,vertical,bottom_l_top_r,bottom_r_top_l
+        # Filter out lists that are subsets of each other
+        return remove_subsets(all_rows)
     
     
     def sides_open(self, consecutive_sets):
@@ -148,11 +166,11 @@ class Board:
             #determine the orientation of the set
             
             #horizontal case
-            if(p_set[0][0][0] == p_set[0][1][0]):
+            if(p_set[0][0] == p_set[1][0]):
                 
-                left_point = (p_set[0][0][0],p_set[0][0][1]-1)
-                right_point =(p_set[0][-1][0],p_set[0][-1][1]+1)
-           
+                left_point = (p_set[0][0],p_set[0][1]-1)
+                right_point =(p_set[-1][0],p_set[-1][1]+1)
+                print(right_point)
                 #left open check
                 if(self.is_valid_move(left_point)):
                     open_space_counts[i] += 1
@@ -164,10 +182,10 @@ class Board:
                 
                 
             #vertical case
-            elif(p_set[0][0][1] == p_set[0][1][1]):
+            elif(p_set[0][1] == p_set[1][1]):
                 
-                top_point = (p_set[0][0][0]-1,p_set[0][0][1])
-                bottom_point = (p_set[0][-1][0]+1,p_set[0][-1][1])
+                top_point = (p_set[0][0]-1,p_set[0][1])
+                bottom_point = (p_set[-1][0]+1,p_set[-1][1])
 
                 #top check 
                 if(self.is_valid_move(top_point)):
@@ -178,9 +196,9 @@ class Board:
                     open_space_counts[i] += 1
 
             #diagnal case top left to bottom right
-            elif p_set[0][0][0] < p_set[0][1][0] and p_set[0][0][1] < p_set[0][1][1]:
-                left_point = (p_set[0][0][0]-1,p_set[0][0][1]-1)
-                right_point =(p_set[0][-1][0]+1,p_set[0][-1][1]+1)
+            elif p_set[0][0] < p_set[1][0] and p_set[0][1] < p_set[1][1]:
+                left_point = (p_set[0][0]-1,p_set[0][1]-1)
+                right_point =(p_set[-1][0]+1,p_set[-1][1]+1)
                 
                 #left open check
                 if(self.is_valid_move(left_point)):
@@ -191,9 +209,9 @@ class Board:
                     open_space_counts[i] += 1
             
             #diagnal case top right to bottom left    
-            elif p_set[0][0][0] > p_set[0][1][0] and p_set[0][0][1] < p_set[0][1][1]:
-                left_point = (p_set[0][0][0]+1,p_set[0][0][1]-1)
-                right_point =(p_set[0][-1][0]-1,p_set[0][-1][1]+1)
+            elif p_set[0][0] > p_set[1][0] and p_set[0][1] < p_set[1][1]:
+                left_point = (p_set[0][0]+1,p_set[0][1]-1)
+                right_point =(p_set[-1][0]-1,p_set[-1][1]+1)
             
                 #left open check
                 if(self.is_valid_move(left_point)):
