@@ -1,19 +1,23 @@
 import numpy as np
 
 def is_subset(list1, list2):
+    """Check if list1 is a subset of list2."""
     return set(list1).issubset(set(list2))
 
 # Function that filters out lists that are subsets of another list
 def remove_subsets(lists_of_tuples):
+    """Remove any lists that are subsets of another list in the input."""
+    # Sort lists by length, so smaller sets come first
+    lists_of_tuples = sorted(lists_of_tuples, key=len, reverse=True)
+    
     filtered_lists = []
-        
+    
     for lst in lists_of_tuples:
+        # Only add if it's not a subset of any list already in filtered_lists
         if not any(is_subset(lst, other) for other in filtered_lists):
-            # Only add if it's not a subset of an already added list
             filtered_lists.append(lst)
-        
+    
     return filtered_lists
-
 
 
 class Board:
@@ -39,9 +43,20 @@ class Board:
     def is_valid_move(self,coord):
         return (coord[0] < 5 and coord[1] < 6 and np.isnan(self.board[coord[0]][coord[1]]))
     
-        #this will be used to generate the sucessors of the current game state        
-    def get_valid_moves(self,player:bool):
-        return 
+    
+    #this will be used to generate the sucessors of the current game state        
+    def get_valid_moves(self):
+        
+        move_list = []
+    
+        for i in range(self.board.shape[0]):
+            for j in range(self.board.shape[1]):
+                
+                if (self.is_valid_move((i,j))):
+                    move_list.append((i,j))
+        
+        
+        return move_list
             
         
     def is_full(self):
@@ -229,7 +244,7 @@ class Board:
             
 
  
-      
+    #TODO add terminal cases so if the board is full, or there is a winner we return accordingly
     #calculates the heuristic of the given board state, depending on current player
     def heuristic(self,player:bool):
         
@@ -242,22 +257,71 @@ class Board:
         two_side_two_row_me = 0
         two_side_two_row_opponent = 0
         one_side_two_row_me = 0
+        one_side_two_row_opponent = 0
         
-        #returns a list of sets, each set is a group of 2-4 points that form a row
+        #returns a list of lists, each set is a group of 2-4 points that form a row
         my_consecutive_plays = self.in_a_row(player)
-        opponenet_consecutive_plays = self.in_a_row(not player)
+        opp_consecutive_plays = self.in_a_row(not player)
         
-        print(my_consecutive_plays)
+
+        
+
         
         #get the number of sides open for each consecutive set
         my_sides_open = self.sides_open(my_consecutive_plays)
-        #opp_sides_open = self.sides_open(opponenet_consecutive_plays)
-        print(my_sides_open)
+        opp_sides_open = self.sides_open(opp_consecutive_plays)
+
         
-        #split these up to read more easily
-        heuristic = 200 * two_side_three_row_me - 80 * two_side_three_row_opponent + 150 * one_side_three_row_me
-        heuristic = heuristic - 40 * one_side_three_row_opponent + 20 * two_side_two_row_me
-        heuristic = heuristic - 15 * two_side_two_row_opponent + 5 * one_side_two_row_me
+        #calculate me heuristic variables
+        for i in range(len(my_sides_open)):
+            if my_sides_open[i] == 2 and len(my_consecutive_plays[i]) == 3:
+                two_side_three_row_me += 1
+                continue
+            
+            if my_sides_open[i] == 1 and len(my_consecutive_plays[i]) == 3:
+                one_side_three_row_me += 1
+                continue
+            
+            if my_sides_open[i] == 2 and len(my_consecutive_plays[i]) == 2:
+                two_side_two_row_me += 1
+                continue
+                
+            if my_sides_open[i] == 1 and len(my_consecutive_plays[i]) == 2:
+                print(my_consecutive_plays[i])
+                print(my_sides_open[i])
+                
+                one_side_two_row_me += 1
+                continue
+        
+        #opponenet variables
+        for i in range((len(opp_sides_open))):
+            if opp_sides_open[i] == 2 and len(opp_consecutive_plays[i]) == 3:
+                two_side_three_row_opponent += 1
+                continue
+            
+            if opp_sides_open[i] == 1 and len(opp_consecutive_plays[i]) == 3:
+                one_side_three_row_opponent += 1
+                continue
+            
+            if opp_sides_open[i] == 2 and len(opp_consecutive_plays[i]) == 2:
+                two_side_two_row_opponent += 1
+                continue
+                
+            if opp_sides_open[i] == 1 and len(opp_consecutive_plays[i]) == 2:
+                one_side_two_row_opponent += 1
+                continue
+            
+
+        heuristic = (
+        200 * two_side_three_row_me
+        - 80 * two_side_three_row_opponent
+        + 150 * one_side_three_row_me
+        - 40 * one_side_three_row_opponent
+        + 20 * two_side_two_row_me
+        - 15 * two_side_two_row_opponent
+        + 5 * one_side_two_row_me
+        - 2 * one_side_two_row_opponent
+    )
         
         
         

@@ -37,19 +37,16 @@ board_world = Board()
 #initial moves for both players (-1,-1 for indexing)
 board_world.move((2,3),1)
 board_world.move((2,2),0)
-board_world.move((2,4),1)
-board_world.move((1,4),1)
-board_world.move((3,5),1)
-board_world.move((1,3),1)
 
-board_world.heuristic(1)
+
+print(board_world.get_valid_moves())
 
 
 #horizontal,vertical,bl_tr,br_tl = board_world.in_a_row(1)
 #print("hor ", horizontal,"vert ",vertical, "bl_tr " , bl_tr, "br_tl ",br_tl)
 
 
-print(board_world.is_valid_move((2,3)))
+#print(board_world.is_valid_move((2,3)))
 
 
 
