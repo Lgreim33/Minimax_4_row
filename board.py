@@ -1,5 +1,13 @@
 import numpy as np
 
+#terminal case values
+WIN = 1000
+LOSS = -1000
+TIE = 0
+
+
+
+
 def is_subset(list1, list2):
     """Check if list1 is a subset of list2."""
     return set(list1).issubset(set(list2))
@@ -23,10 +31,7 @@ def remove_subsets(lists_of_tuples):
 class Board:
     LENGTH = 6
     HEIGHT = 5
-    #terminal case values
-    WIN = 1000
-    LOSS = -1000
-    TIE = 0
+
     #refernece to board
     board = None
     
@@ -248,7 +253,7 @@ class Board:
     #calculates the heuristic of the given board state, depending on current player
     def heuristic(self,player:bool):
         
-        #check termial cases before calculating the heuristic ie, full board or a player won
+        
    
         two_side_three_row_me = 0
         two_side_three_row_opponent = 0
@@ -259,12 +264,25 @@ class Board:
         one_side_two_row_me = 0
         one_side_two_row_opponent = 0
         
+        
+        
         #returns a list of lists, each set is a group of 2-4 points that form a row
         my_consecutive_plays = self.in_a_row(player)
         opp_consecutive_plays = self.in_a_row(not player)
         
-
-        
+        #check termial cases before calculating the heuristic ie, full board or a player won
+        #if there are any sets of 4, someone won
+        for row in my_consecutive_plays:
+            if len(row) == 4:
+                return WIN
+        for row in opp_consecutive_plays:
+            if len(row) == 4:
+                return LOSS
+            
+        #check for full last, because if it's full AND there are 4 in a row, we shouldn't care that the board happens to be full
+        if(self.is_full()):
+            return TIE
+            
 
         
         #get the number of sides open for each consecutive set

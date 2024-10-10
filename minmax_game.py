@@ -7,7 +7,7 @@ from board import Board
 
 #generates the sucessor of the passed game_state
 def generate_sucsessors(board):
-    succsessor_list = []
+    succsessor_list = board.get_valid_moves()
     
 
     
@@ -39,7 +39,7 @@ board_world.move((2,3),1)
 board_world.move((2,2),0)
 
 
-print(board_world.get_valid_moves())
+print(board_world.heuristic(0))
 
 
 #horizontal,vertical,bl_tr,br_tl = board_world.in_a_row(1)
