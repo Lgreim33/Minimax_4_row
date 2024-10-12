@@ -1,23 +1,23 @@
 import numpy as np
 from board import Board
-
+import time
         
         
-    
+WIN = 1000
+TIE = 0
+LOSS = -1000
 
 #generates the sucessor of the passed game_state
 def generate_sucsessors(board):
     succsessor_list = board.get_valid_moves()
     
+    
 
     
-    
-    
-def calc_heuristic():
-    return
+
 
 #recursive minimax
-def minimax(state,is_maxing,depth):
+def minimax(state,is_maxing,depth,alpha,beta):
     
     
     
@@ -30,26 +30,80 @@ def minimax(state,is_maxing,depth):
         return
     return
 
-
-#init the board world
-board_world = Board()
-
-#initial moves for both players (-1,-1 for indexing)
-board_world.move((2,3),1)
-board_world.move((2,2),0)
-
-
-print(board_world.heuristic(0))
-
-
-#horizontal,vertical,bl_tr,br_tl = board_world.in_a_row(1)
-#print("hor ", horizontal,"vert ",vertical, "bl_tr " , bl_tr, "br_tl ",br_tl)
+#handles the minimax call for player 1, takes the board state as an argument, wont return anything
+def player_1_move(board):
+    start_time = time.time()
+    
+    #two ply call for minimax
+    
+    end_time = time.time() - start_time
+    
+    return
 
 
-#print(board_world.is_valid_move((2,3)))
+#handles the monimax call for player 2, takes the board state as an argument, wont return anything
+def player_2_move(board):
+    
+    start_time = time.time()
+    
+    #four ply call for minimax
+    
+    end_time = time.time() - start_time
+    return 
 
 
 
-print(board_world.board)
 
 
+
+#driver function for minimax and players
+def start():
+    #init the board world
+    board_world = Board()
+
+    #we will start displaying the actual turn variable after the manual intial moves
+    turn = 3
+    
+    player_1_move = (2,3)
+    player_2_move = (2,2)
+    
+    #initial moves for both players (-1,-1 for indexing)
+    print("Turn 1")
+    print("Player 1 Moves: ", player_1_move)
+    board_world.move(player_1_move,1)
+    print(board_world.board)
+    
+    print("Turn 2")
+    print("Player 2 Moves: ", player_2_move)
+    board_world.move(player_2_move,0)
+    print(board_world.board)
+    
+    #while the board isnt full and nobody has won, play the game
+    while not board_world.is_full(): 
+        print(f"Turn {turn}")
+        
+        if turn % 2 != 0:
+            player_1_move(board_world)
+        else:
+            player_2_move(board_world)
+        
+        #print the board after the move
+        print(board_world.board)
+        
+        #check the current board state for both players and check to see if they won
+        if board_world.heuristic(True) == WIN:
+            print("Player 1 Wins!")
+            return 
+
+        if board_world.heuristic(False) == WIN:
+            print("Player 2 Wins!")
+            return 
+        
+        turn +=1
+    #if we've left the loop, that means teh board is full and nobody won
+    print("It's a tie :/")
+    return        
+    
+
+
+start()
