@@ -7,14 +7,14 @@ TIE = 0
 
 
 
-
+#helper function for ignoring subsets of consecutive lists
 def is_subset(list1, list2):
-    """Check if list1 is a subset of list2."""
+
     return set(list1).issubset(set(list2))
 
-# Function that filters out lists that are subsets of another list
+#function that filters out lists that are subsets of another list
 def remove_subsets(lists_of_tuples):
-    """Remove any lists that are subsets of another list in the input."""
+
     # Sort lists by length, so smaller sets come first
     lists_of_tuples = sorted(lists_of_tuples, key=len, reverse=True)
     
@@ -28,6 +28,7 @@ def remove_subsets(lists_of_tuples):
     return filtered_lists
 
 
+#board class will hold most of the board logic for making moves and generating board states
 class Board:
     LENGTH = 6
     HEIGHT = 5
@@ -40,20 +41,21 @@ class Board:
         self.board = np.empty((self.HEIGHT,self.LENGTH))
         self.board[:] = np.NaN
         
-        
+    #places piece at cooridnate for player
     def move(self,coordinate,player:bool):
         self.board[coordinate[0]][coordinate[1]] = player
         
-    #is the move valid
+    #is the move valid?
     def is_valid_move(self,coord):
         return (coord[0] < 5 and coord[1] < 6 and np.isnan(self.board[coord[0]][coord[1]]))
     
     
-    #this will be used to generate the sucessors of the current game state        
+    #this will be used to generate the sucessors of the current game state, returns a list of tuples, the tupples are coordinates      
     def get_valid_moves(self):
         
         move_list = []
-    
+
+
         for i in range(self.board.shape[0]):
             for j in range(self.board.shape[1]):
                 
@@ -63,41 +65,42 @@ class Board:
         
         return move_list
             
-        
+    #check if the board is completely filled up
     def is_full(self):
         if True in np.isnan(self.board):
             return False
         else: 
             return True
         
-    
+    #check for horizontal consecutive plays for the passed player
     def check_horizontal(self, player):
-        """
-        Check for 2 or more consecutive 'player' symbols horizontally.
-        Return a list of sets of coordinates for any consecutive pieces found.
-        """
+
+
         consecutive_coords = []
+        #traverse the board
         for r, row in enumerate(self.board):
             start = None
             for c in range(self.board.shape[1]):
                 if row[c] == player:
+                    #start of the consecutive plays, potentially
                     if start is None:
                         start = c
+                    #make sure the length is greater than 2, and that 
                     if c == self.board.shape[1] - 1 and c - start + 1 >= 2:
                         # Add coordinates of the last consecutive pieces
                         consecutive_coords.append([(r, i) for i in range(start, c+1)])
+                #c is no longer player, so append the consecutive coordinates if necessary
                 else:
                     if start is not None and c - start >= 2:
                         consecutive_coords.append([(r, i) for i in range(start, c)])
                     start = None
         return consecutive_coords
     
+    #vertical consectuive checker
     def check_vertical(self, player):
-        """
-        Check for 2 or more consecutive 'player' symbols vertically.
-        Return a list of sets of coordinates for any consecutive pieces found.
-        """
+
         consecutive_coords = []
+        #traverse the board
         for c in range(self.board.shape[1]):
             start = None
             for r in range(self.board.shape[0]):
@@ -113,6 +116,7 @@ class Board:
                     start = None
         return consecutive_coords
     
+    #check for consecutive plays from top left to bottom right
     def check_diagonal_tl_br(self, player):
         consecutive_coords = []
         rows, cols = self.board.shape
@@ -136,7 +140,7 @@ class Board:
                     
                     
                 
-    
+    #check for consecutive coordinates from bottom left to top right
     def check_diagonal_bl_tr(self, player):
         consecutive_coords = []
         rows, cols = self.board.shape
@@ -161,7 +165,7 @@ class Board:
 
 
 
-    # Main function to calculate in-a-row sets without subsets
+    #retruns a list of all consecutive plays for a player, calls all of our consecutive helper functions
     def in_a_row(self, player: bool):
         horizontal = self.check_horizontal(player)
         vertical = self.check_vertical(player)
@@ -170,27 +174,27 @@ class Board:
         
         all_rows = horizontal + vertical + bottom_l_top_r + bottom_r_top_l
         
-        # Filter out lists that are subsets of each other
+        #filter out lists that are subsets of each other
         return remove_subsets(all_rows)
     
-    
+    #takes the list returned by in_a_row and counts how many sides are open for each of them, returns a frequency array
     def sides_open(self, consecutive_sets):
         
+        #no consecutive sets
         if len(consecutive_sets) == 0:
             return []
-        
+        #generate the frequency list
         open_space_counts = [0] * len(consecutive_sets)
 
         for i,p_set in enumerate(consecutive_sets):
 
-            #determine the orientation of the set
             
             #horizontal case
             if(p_set[0][0] == p_set[1][0]):
                 
                 left_point = (p_set[0][0],p_set[0][1]-1)
                 right_point =(p_set[-1][0],p_set[-1][1]+1)
-                print(right_point)
+
                 #left open check
                 if(self.is_valid_move(left_point)):
                     open_space_counts[i] += 1
@@ -241,7 +245,7 @@ class Board:
                 if(self.is_valid_move(right_point)):
                     open_space_counts[i] += 1
 
-            # Make sure we're working with sets with at least 2 points
+            #make sure we're working with sets with at least 2 points
             if len(p_set) < 2:
                 continue
             
@@ -249,12 +253,12 @@ class Board:
             
 
  
-    #TODO add terminal cases so if the board is full, or there is a winner we return accordingly
+ 
     #calculates the heuristic of the given board state, depending on current player
     def heuristic(self,player:bool):
         
         
-   
+        #sorta messy looking, but makes it clear what each value pertains to 
         two_side_three_row_me = 0
         two_side_three_row_opponent = 0
         one_side_three_row_me = 0
@@ -304,10 +308,7 @@ class Board:
                 two_side_two_row_me += 1
                 continue
                 
-            if my_sides_open[i] == 1 and len(my_consecutive_plays[i]) == 2:
-                print(my_consecutive_plays[i])
-                print(my_sides_open[i])
-                
+            if my_sides_open[i] == 1 and len(my_consecutive_plays[i]) == 2:               
                 one_side_two_row_me += 1
                 continue
         
