@@ -82,6 +82,7 @@ def start():
     while not board_world.is_full(): 
         print(f"Turn {turn}")
         
+        #if player one takes odd turns, player 2 takes even turns
         if turn % 2 != 0:
             player_1_move(board_world)
         else:
