@@ -7,10 +7,17 @@ WIN = 1000
 TIE = 0
 LOSS = -1000
 
+PLAYER_1 = 1
+PLAYER_2 = 0
+
+# Globally track nodes that are recursively generated
+node_count = 0
+
 # generates the successors of the passed game_state
 def generate_successors(state, player):
     successors = []
     valid_moves = state.get_valid_moves()
+    global node_count
     
     if not valid_moves:
         print(f"No valid moves for player {player}")
@@ -20,11 +27,19 @@ def generate_successors(state, player):
         next_state.board = np.copy(state.board)  # Create a copy of the current board
         next_state.move(move, player)  # Apply the move
         successors.append((next_state, move))  # Add the new board state and the move to the list
-    
+        node_count += 1
     return successors
 
 # recursive minimax, returns the best move to make for the player
-def minimax(state, is_maxing, depth, alpha, beta):
+def minimax(state, me, is_maxing, depth, alpha, beta):
+
+    global node_count
+
+    if me == PLAYER_1:
+        them = PLAYER_2
+    elif me == PLAYER_2:
+        them = PLAYER_1
+    else: raise ValueError("Parameter 'me' must be 0 or 1. Actual:", me)
 
     # base case
     if depth == 0 or state.is_full():
@@ -35,8 +50,8 @@ def minimax(state, is_maxing, depth, alpha, beta):
     # maximizing the heuristic
     if is_maxing:
         best_score = np.float64("-inf")
-        for successor, move in generate_successors(state, 1):  # Player 1 lookahead
-            score, m = minimax(successor, False, depth - 1, alpha, beta)
+        for successor, move in generate_successors(state, me):  # My lookahead
+            score, m = minimax(successor, them, False, depth - 1, alpha, beta)
 
             if score > best_score:  # max(score, best_score)
                 best_score = score
@@ -52,8 +67,8 @@ def minimax(state, is_maxing, depth, alpha, beta):
     # minimizing the heuristic
     else:
         best_score = np.float64("inf")
-        for successor, move in generate_successors(state, 0):  # Player 2 lookahead
-            score, m = minimax(successor, True, depth - 1, alpha, beta)
+        for successor, move in generate_successors(state, them):  # Their lookahead
+            score, m = minimax(successor, me, True, depth - 1, alpha, beta)
 
             if score < best_score:  
                 best_score = score
@@ -66,31 +81,35 @@ def minimax(state, is_maxing, depth, alpha, beta):
 
         return best_score, best_move
 
-
-
 #handles the minimax call for player 1, takes the board state as an argument, wont return anything
 def player_1_move(board):
+    global node_count
+    node_count = 0
+
     start_time = time.time()
     
     #two ply call for minimax
-    s, move = minimax(board,True,2,alpha=np.float64("-inf"),beta=np.float64("inf"))
-    
+    s, move = minimax(board,PLAYER_1,True,2,alpha=np.float64("-inf"),beta=np.float64("inf"))
     end_time = time.time() - start_time
     
     board.move(move,1)
     print(f"Minimax took: {end_time} seconds")
     print(f"Player 1 Places X at {move} for Score {s}")
+
+    print(f"Nodes generated for Player 1: {node_count}")
     
     return
 
 
 #handles the monimax call for player 2, takes the board state as an argument, wont return anything
 def player_2_move(board):
+    global node_count
+    node_count = 0
     
     start_time = time.time()
     
     #four ply call for minimax
-    s, move = minimax(board,False,4,alpha=np.float64("-inf"),beta=np.float64("inf"))
+    s, move = minimax(board,PLAYER_2,True,4,alpha=np.float64("-inf"),beta=np.float64("inf"))
     
     end_time = time.time() - start_time
     
@@ -100,11 +119,10 @@ def player_2_move(board):
         print(f"Player 2 Places O at {move} for Score {s}")
     else:
         print("")# print("No valid moves for Player 2")
+    
+    print(f"Nodes generated for Player 2: {node_count}")
 
-    print(f"Minimax took: {end_time} seconds")
-    print(f"Player 2 Places O at {move} for Score {s}")
     return 
-
 
 
 
@@ -159,6 +177,30 @@ def start():
     print("It's a tie :/")
     return        
     
+def test_heuristic():
+    aboard = Board()
+    aboard.move((1, 2), 0)  # O
+    aboard.move((2, 2), 0)  # O
+    aboard.move((2, 3), 0)  # O
+    aboard.move((3, 4), 0)  # O
+    aboard.move((3, 1), 0)  # O
 
+    aboard.move((1, 3), 1)  # X
+    aboard.move((3, 3), 1)  # X
+    aboard.move((3, 2), 1)  # X
+    aboard.move((4, 2), 1)  # X
+    aboard.move((2, 4), 1)  # X
+ 
+    print(aboard.board)
 
+    heuristic_value = aboard.heuristic(True)
+
+    print(f"Heuristic value for player X: {heuristic_value}")
+
+    expected_value = 84
+    assert heuristic_value == expected_value, f"Expected {expected_value}, but got {heuristic_value}"
+    return
+
+# Run the test
+# test_heuristic()
 start()
