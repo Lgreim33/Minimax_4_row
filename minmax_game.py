@@ -10,10 +10,10 @@ LOSS = -1000
 PLAYER_1 = 1
 PLAYER_2 = 0
 
-# Globally track nodes that are recursively generated
+# globally track recursively-generated nodes
 node_count = 0
 
-# generates the successors of the passed game_state
+# generates possible moves after state
 def generate_successors(state, player):
     successors = []
     valid_moves = state.get_valid_moves()
@@ -24,9 +24,9 @@ def generate_successors(state, player):
 
     for move in valid_moves:
         next_state = Board()
-        next_state.board = np.copy(state.board)  # Create a copy of the current board
+        next_state.board = np.copy(state.board)  # Copy of current board
         next_state.move(move, player)  # Apply the move
-        successors.append((next_state, move))  # Add the new board state and the move to the list
+        successors.append((next_state, move))  # List contains next_state its corresponding move 
         node_count += 1
     return successors
 
@@ -35,11 +35,11 @@ def minimax(state, me, is_maxing, depth, alpha, beta):
 
     global node_count
 
-    if me == PLAYER_1:
+    if me == PLAYER_1: # Me: Whose Turn it is, Them: Opponent
         them = PLAYER_2
     elif me == PLAYER_2:
         them = PLAYER_1
-    else: raise ValueError("Parameter 'me' must be 0 or 1. Actual:", me)
+    else: raise ValueError("Parameter 'me' must be 0 or 1. Actual: ", me)
 
     # base case
     if depth == 0 or state.is_full():
@@ -89,19 +89,33 @@ def player_1_move(board):
     start_time = time.time()
     
     #two ply call for minimax
-    s, move = minimax(board,PLAYER_1,True,2,alpha=np.float64("-inf"),beta=np.float64("inf"))
+    s, move = minimax(board, PLAYER_1, True, 2, alpha=np.float64("-inf"), beta=np.float64("inf"))
     end_time = time.time() - start_time
-    
-    board.move(move,1)
-    print(f"Minimax took: {end_time} seconds")
-    print(f"Player 1 Places X at {move} for Score {s}")
 
-    print(f"Nodes generated for Player 1: {node_count}")
+    if move is not None:
+        board.move(move, 1)
+        print("Player 1 Places X at", format_move(move))
+        print(format_board(board.board))
+    else:
+        print("No valid moves for Player 1")
     
+    print(f"Minimax took: {end_time} seconds")
+    print(f"Nodes generated for Player 1: {node_count}")
+    print("-----") 
     return
 
+# Some extra format functions for print that aren't part of Board.py
+def format_board(board): # Let { nan -> . , 1 -> x , 0 -> o }
+    formatted_rows = []
+    for row in board:
+        formatted_row = ["." if np.isnan(cell) else "x" if cell == 1 else "o" for cell in row]
+        formatted_rows.append(" ".join(formatted_row))
+    string = "\n".join(formatted_rows)
+    return string
 
-#handles the monimax call for player 2, takes the board state as an argument, wont return anything
+def format_move(move): return f"{[move[0] + 1, move[1] + 1]}"
+
+#handles the minimax call for player 2, takes the board state as an argument, wont return anything
 def player_2_move(board):
     global node_count
     node_count = 0
@@ -109,24 +123,21 @@ def player_2_move(board):
     start_time = time.time()
     
     #four ply call for minimax
-    s, move = minimax(board,PLAYER_2,True,4,alpha=np.float64("-inf"),beta=np.float64("inf"))
+    s, move = minimax(board, PLAYER_2, True, 4, alpha=np.float64("-inf"), beta=np.float64("inf"))
     
     end_time = time.time() - start_time
     
     if move is not None:
         board.move(move, 0)
-        print(f"Minimax took: {end_time} seconds")
-        print(f"Player 2 Places O at {move} for Score {s}")
+        print("Player 2 Places O at", format_move(move))
+        print(format_board(board.board))
     else:
-        print("")# print("No valid moves for Player 2")
+        print("No valid moves for Player 2")
     
+    print(f"Minimax took: {end_time} seconds")
     print(f"Nodes generated for Player 2: {node_count}")
-
+    print("-----")
     return 
-
-
-
-
 
 #driver function for minimax and players
 def start():
@@ -141,14 +152,16 @@ def start():
     
     #initial moves for both players (-1,-1 for indexing)
     print("Turn 1")
-    print("Player 1 Moves: ", player_1_init)
+    print("Player 1 Places X at", format_move(player_1_init))
     board_world.move(player_1_init,1)
-    print(board_world.board)
+    print(format_board(board_world.board))
+    print("-----")
     
     print("Turn 2")
-    print("Player 2 Moves: ", player_2_init)
+    print("Player 2 Places O at", format_move(player_2_init))
     board_world.move(player_2_init,0)
-    print(board_world.board)
+    print(format_board(board_world.board))
+    print("-----")
     
     #while the board isnt full and nobody has won, play the game
     while not board_world.is_full(): 
@@ -160,9 +173,6 @@ def start():
         else:
             player_2_move(board_world)
         
-        #print the board after the move
-        print(board_world.board)
-        
         #check the current board state for both players and check to see if they won
         if board_world.heuristic(True) == WIN:
             print("Player 1 Wins!")
@@ -173,34 +183,9 @@ def start():
             return 
         
         turn +=1
-    #if we've left the loop, that means teh board is full and nobody won
+    #if we've left the loop, that means the board is full and nobody won
     print("It's a tie :/")
     return        
-    
-def test_heuristic():
-    aboard = Board()
-    aboard.move((1, 2), 0)  # O
-    aboard.move((2, 2), 0)  # O
-    aboard.move((2, 3), 0)  # O
-    aboard.move((3, 4), 0)  # O
-    aboard.move((3, 1), 0)  # O
-
-    aboard.move((1, 3), 1)  # X
-    aboard.move((3, 3), 1)  # X
-    aboard.move((3, 2), 1)  # X
-    aboard.move((4, 2), 1)  # X
-    aboard.move((2, 4), 1)  # X
- 
-    print(aboard.board)
-
-    heuristic_value = aboard.heuristic(True)
-
-    print(f"Heuristic value for player X: {heuristic_value}")
-
-    expected_value = 84
-    assert heuristic_value == expected_value, f"Expected {expected_value}, but got {heuristic_value}"
-    return
 
 # Run the test
-# test_heuristic()
 start()
